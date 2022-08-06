@@ -1,0 +1,202 @@
+---
+title: "IRSS Coffee tasking"
+output: 
+  prettydoc::html_pretty:
+  theme: hpstr
+  highlight: vignette
+---
+
+# IRSS coffee tasting
+
+Today we are trying 6 unique varieties of coffee from Oso Negro coffee roasters in Nelson, BC. These coffees have been ground for brewing in a french press. We will try two coffees at a time. At the end of the coffee tasting you will blind rate your favorite coffee and we will look at the results. Below is a synopsis of the coffees we are trying and where the beans of each variety are sourced from.
+
+```{r include = FALSE}
+library(tidyverse)
+library(tmap)
+library(ggplot2)
+library(sf)
+```
+
+```{r include = FALSE, message = FALSE}
+data("World")
+
+road_rider_cc <- c('Sumatra','Ethiopia', 'Columbia', 'Costa Rica', 'Guatemala',
+                   'Honduras','Mexico', 'Nicaragua', 'Brazil', 'Bolivia', 'Ecuador', 'Venezuela',
+                   'Chili')
+justicia_cc <-   c('Guatemala') # https://www.cafejusticia.ca/
+
+low_acid_cc <- c('Columbia', 'Costa Rica', 'Guatemala',
+                   'Honduras','Mexico', 'Nicaragua', 'Brazil', 'Bolivia', 'Ecuador', 'Venezuela',
+                   'Chili', 'Sumatra', 'Indonesia')
+messy_room_cc <- c('Columbia', 'Costa Rica', 'Guatemala',
+                   'Honduras','Mexico', 'Nicaragua', 'Brazil', 'Bolivia', 'Ecuador', 'Venezuela')
+princess_of_darkness_cc <- c('Columbia', 'Costa Rica', 'Guatemala',
+                   'Honduras','Mexico', 'Nicaragua', 'Brazil', 'Bolivia', 'Ecuador', 'Venezuela',
+                   'Chili', 'Indonesia')
+royal_select_cc <-c('Columbia', 'Costa Rica', 'Guatemala',
+                   'Honduras','Mexico', 'Nicaragua', 'Brazil', 'Bolivia', 'Ecuador', 'Venezuela',
+                   'Chili', 'Indonesia', 'Ethiopia','Sumatra', 'Uganda')
+
+
+bind_all <-  c(road_rider_cc, justicia_cc, low_acid_cc, 
+               messy_room_cc, princess_of_darkness_cc, 
+               royal_select_cc) %>% as.data.frame() %>% rename(., 'name' = .) %>% 
+  group_by(name) %>% mutate(count_country = n())
+
+world_coffee <- World %>% left_join(bind_all) %>% st_transform(.,crs = 8857)
+
+colors <- rev(viridisLite::viridis(6, alpha = 1, begin = 0, end = 0.76, direction = -1))
+```
+
+```{R, echo = F, message = FALSE, fig.fullwidth =T}
+tmap_style("cobalt")
+  tm_shape(world_coffee) + 
+  tm_polygons(col = "count_country", title = "# of Coffees from Country", palette = "-GnBu", n = 5, contrast = c(0.33, 0.91), legend.title = "# Coffees From Country", colorNA = "cornflowerblue") +
+  tm_shape(world_coffee %>% subset(!is.na(world_coffee$count_country))) + 
+  tm_borders(lwd = 2) +
+  tm_graticules(alpha = 0.6) + 
+  tm_compass(type = "8star", size = 2, position = c("right", "bottom")) +
+  tm_scale_bar()
+```
+
+##  Road Rider
+
+```{r, echo = F, message = F, warning=F, fig.fullwidth =T}
+tmap_mode(mode = 'plot')
+road_subset<- world_coffee %>% subset(name %in% road_rider_cc) %>% 
+  mutate(road_rider = paste0(name)) %>% group_by(road_rider) %>% summarise()
+
+tm_basemap("https://{s}.tile.jawg.io/jawg-light/{z}/{x}/{y}{r}.png?access-token={accessToken}") +
+  tm_shape(road_subset, is.master = T) + 
+  tm_polygons(fill = "road_rider", pallette = "GnBu") + 
+  tm_shape(world_coffee) + 
+  tm_polygons(alpha = 0.2, lwd = 1) +
+  tm_shape(road_subset) + 
+  tm_text(text = "road_rider") +
+  tm_layout(fontface = "bold") +
+  tm_graticules(alpha = 0.6) + 
+  tm_compass(type = "8star", size = 2, position = c("right", "bottom")) +
+  tm_scale_bar() 
+
+```
+
+\
+*light roast*
+
+The Road Rider Blend is clean, citrusy, and very smooth. It features pleasantly acidic coffee from Central and South America, sweet and fruity Ethiopian beans, and subdued earthiness courtesy of Sumatra. An excellent choice for a lighter drip blend.
+
+## Low acid
+
+```{r, echo = F, message = F, warning=F, fig.fullwidth =T}
+
+low_acid_subset<- world_coffee %>% subset(name %in% low_acid_cc) %>% 
+  mutate(road_rider = paste0(name)) %>% group_by(road_rider) %>% summarise() 
+
+tm_basemap("https://{s}.tile.jawg.io/jawg-light/{z}/{x}/{y}{r}.png?access-token={accessToken}") +
+  tm_shape(low_acid_subset, is.master = T) + 
+  tm_polygons(fill = "road_rider", pallette = "GnBu") + 
+  tm_shape(world_coffee) + 
+  tm_polygons(alpha = 0.2, lwd = 1) +
+  tm_shape(low_acid_subset) + 
+  tm_text(text = "road_rider", fontface = "bold") +
+  tm_graticules(alpha = 0.6) + 
+  tm_compass(type = "8star", size = 2, position = c("right", "bottom")) +
+  tm_scale_bar() 
+```
+
+\
+
+*medium roast*
+
+The Low Acid Blend features smooth coffee from Central and South America and mildly nutty Sumatran beans. The result is a subtly earthy blend with a clean, sweet aftertaste.
+
+## Messy Room
+
+```{r, echo = F, message = F, warning=F, fig.fullwidth =T}
+messy_room <- world_coffee %>% subset(name %in% messy_room_cc) %>% 
+  mutate(road_rider = paste0(name)) %>% group_by(road_rider) %>% summarise() 
+
+
+tm_basemap("https://{s}.tile.jawg.io/jawg-light/{z}/{x}/{y}{r}.png?access-token={accessToken}") +
+  tm_shape(messy_room, is.master = T) + 
+  tm_polygons(fill = "road_rider", pallette = "GnBu") + 
+  tm_shape(world_coffee) + 
+  tm_polygons(alpha = 0.2, lwd = 1) +
+  tm_shape(low_acid_subset) + 
+  tm_text(text = "road_rider", fontface = "bold") +
+  tm_graticules(alpha = 0.6) + 
+  tm_compass(type = "8star", size = 2, position = c("right", "bottom")) +
+  tm_scale_bar() 
+```
+
+\
+*dark roast*
+
+A delicious fusion of chocolatey Central and South American beans, exotic spiciness from East Africa, and buttery smoothness from Sulawesi. A clean, full-bodied blend with a hit of spice at the finish. Messy Room is a highly recommended espresso blend.
+
+## Princess of Darkness
+
+```{r, echo = F, message = F, warning=F,fig.fullwidth =T}
+
+
+princess <- world_coffee %>% subset(name %in% princess_of_darkness_cc) %>% 
+  mutate(road_rider = paste0(name)) %>% group_by(road_rider) %>% summarise() 
+
+
+tm_basemap("https://{s}.tile.jawg.io/jawg-light/{z}/{x}/{y}{r}.png?access-token={accessToken}") +
+  tm_shape(princess, is.master = T) + 
+  tm_polygons(fill = "road_rider", pallette = "GnBu") + 
+  tm_shape(world_coffee) + 
+  tm_polygons(alpha = 0.2, lwd = 1) +
+  tm_shape(low_acid_subset) + 
+  tm_text(text = "road_rider", fontface = "bold") +
+  tm_graticules(alpha = 0.6) + 
+  tm_compass(type = "8star", size = 2, position = c("right", "bottom")) +
+  tm_scale_bar() 
+
+```
+
+*very dark roast*
+
+The Princess of Darkness Blend provides a big, clean mouth feel, smooth butteriness and a hint of rich savoury nut. Our darkest blend, still faintly sweet like caramel -- the Princess is a great choice for making a powerful dark drip.
+
+## Justicia
+
+```{r, echo = F, message = F, warning=F, fig.fullwidth =T}
+library(leaflet)
+
+m <- leaflet::leaflet() %>% 
+addProviderTiles(providers$CartoDB.Positron) %>%
+leaflet::addMarkers(lat = 14.69, lng = -91.22, popup = "Goring location of Justicia blend")
+m 
+ 
+```
+
+*medium roast single-origin*
+
+Guatemalan coffee grown on the slopes of lake Atitlan in Guatemala.
+
+## Royal Select
+
+```{r, echo = F, message = F, warning=F, fig.fullwidth =T}
+royal <- world_coffee %>% subset(name %in% royal_select_cc) %>% 
+  mutate(road_rider = paste0(name)) %>% group_by(road_rider) %>% summarise() 
+
+
+tm_basemap("https://{s}.tile.jawg.io/jawg-light/{z}/{x}/{y}{r}.png?access-token={accessToken}") +
+  tm_shape(royal, is.master = T) + 
+  tm_polygons(fill = "road_rider", pallette = "GnBu") + 
+  tm_shape(world_coffee) + 
+  tm_polygons(alpha = 0.2, lwd = 1) +
+  tm_shape(low_acid_subset) + 
+  tm_text(text = "road_rider", fontface = "bold") +
+  tm_graticules(alpha = 0.6) + 
+  tm_compass(type = "8star", size = 2, position = c("right", "bottom")) +
+  tm_scale_bar() 
+```
+
+Royal Select Decaf is a product of a water decaffeination process that retains as much flavour as possible creating a coffee that is very layered, deftly balanced and hard to distinguish from regular coffee.
+
+## Fill out the form : 
+
+[IRSS Coffee Tasting Response Form](https://forms.gle/CUk3K5L2pQDHqBkq5)
